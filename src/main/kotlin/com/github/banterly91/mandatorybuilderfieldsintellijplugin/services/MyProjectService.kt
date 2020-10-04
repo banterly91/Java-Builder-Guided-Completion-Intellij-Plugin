@@ -1,7 +1,7 @@
-package org.jetbrains.plugins.template.services
+package com.github.banterly91.mandatorybuilderfieldsintellijplugin.services
 
 import com.intellij.openapi.project.Project
-import org.jetbrains.plugins.template.MyBundle
+import com.github.banterly91.mandatorybuilderfieldsintellijplugin.MyBundle
 
 class MyProjectService(project: Project) {
 
