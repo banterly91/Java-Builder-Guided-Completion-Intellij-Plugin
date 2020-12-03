@@ -1,11 +1,13 @@
 <idea-plugin>
     <id>com.github.banterly91.mandatorybuilderfieldsintellijplugin</id>
-    <name>mandatory-builder-fields-intellij-plugin</name>
+    <name>mandatory-builder-fields-intellij</name>
     <vendor>banterly91</vendor>
 
     <!-- Product and plugin compatibility requirements -->
     <!-- https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationService serviceImplementation="com.github.banterly91.mandatorybuilderfieldsintellijplugin.services.MyApplicationService"/>
