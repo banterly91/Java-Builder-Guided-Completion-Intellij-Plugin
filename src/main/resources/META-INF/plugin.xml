@@ -10,6 +10,7 @@
 
 
     <extensions defaultExtensionNs="com.intellij">
+        <completion.contributor language="JAVA" order="before javaLegacy" implementationClass="net.banterly.buildercompletion.BuilderCompletionProvider"/>
         <applicationService serviceImplementation="com.github.banterly91.mandatorybuilderfieldsintellijplugin.services.MyApplicationService"/>
         <projectService serviceImplementation="com.github.banterly91.mandatorybuilderfieldsintellijplugin.services.MyProjectService"/>
     </extensions>
