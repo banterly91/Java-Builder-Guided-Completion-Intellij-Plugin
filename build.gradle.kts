@@ -94,25 +94,34 @@ tasks {
 
         // Extract the <!-- Plugin description --> section from README.md and provide for the plugin's manifest
         pluginDescription(
-            closure {
-                File("./README.md").readText().lines().run {
-                    val start = "<!-- Plugin description -->"
-                    val end = "<!-- Plugin description end -->"
+                closure {
+                    File("./README.md").readText().lines().run {
+                        val start = "<!-- Plugin description -->"
+                        val end = "<!-- Plugin description end -->"
 
-                    if (!containsAll(listOf(start, end))) {
-                        throw GradleException("Plugin description section not found in README.md file:\n$start ... $end")
-                    }
-                    subList(indexOf(start) + 1, indexOf(end))
-                }.joinToString("\n").run { markdownToHTML(this) }
-            }
+                        if (!containsAll(listOf(start, end))) {
+                            throw GradleException("Plugin description section not found in README.md file:\n$start ... $end")
+                        }
+                        subList(indexOf(start) + 1, indexOf(end))
+                    }.joinToString("\n").run { markdownToHTML(this) }
+                }
         )
 
         // Get the latest available change notes from the changelog file
         changeNotes(
-            closure {
-                changelog.getLatest().toHTML()
-            }
+                closure {
+                    changelog.getLatest().toHTML()
+                }
         )
+    }
+
+    withType<org.jetbrains.intellij.tasks.RunIdeTask> {
+        // Default args for IDEA installation
+        //   jvmArgs("-Xmx768m", "-XX:+UseConcMarkSweepGC", "-XX:SoftRefLRUPolicyMSPerMB=50")
+        // Disable auto plugin resloading. See `com.intellij.ide.plugins.DynamicPluginVfsListener`
+        jvmArgs("-Didea.auto.reload.plugins=false")
+        // uncomment if `unexpected exception ProcessCanceledException` prevents you from debugging a running IDE
+        jvmArgs("-Didea.ProcessCanceledException=disabled")
     }
 
     publishPlugin {
