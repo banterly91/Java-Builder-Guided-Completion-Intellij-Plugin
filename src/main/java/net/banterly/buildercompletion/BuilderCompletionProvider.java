@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
 public class BuilderCompletionProvider extends CompletionContributor {
 
     private enum LookupElementStyle {
-        INVALID {
+        INVALID(1000) {
             @Override
             public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
-                LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, 1000);
+                LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, getPriority());
                 return LookupElementDecorator.withRenderer(prioritizedLookupElement, new LookupElementRenderer<LookupElementDecorator<LookupElement>>() {
                     @Override
                     public void renderElement(LookupElementDecorator<LookupElement> element, LookupElementPresentation presentation) {
@@ -35,10 +35,10 @@ public class BuilderCompletionProvider extends CompletionContributor {
                     }
                 });
             }
-        }, OPTIONAL {
+        }, OPTIONAL(1001) {
             @Override
             public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
-                LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, 1001);
+                LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, getPriority());
                 return LookupElementDecorator.withRenderer(prioritizedLookupElement, new LookupElementRenderer<LookupElementDecorator<LookupElement>>() {
                     @Override
                     public void renderElement(LookupElementDecorator<LookupElement> element, LookupElementPresentation presentation) {
@@ -49,10 +49,10 @@ public class BuilderCompletionProvider extends CompletionContributor {
                     }
                 });
             }
-        }, MANDATORY {
+        }, MANDATORY(1002) {
             @Override
             public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
-                LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, 1002);
+                LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, getPriority());
                 return LookupElementDecorator.withRenderer(prioritizedLookupElement, new LookupElementRenderer<LookupElementDecorator<LookupElement>>() {
                     @Override
                     public void renderElement(LookupElementDecorator<LookupElement> element, LookupElementPresentation presentation) {
@@ -64,6 +64,16 @@ public class BuilderCompletionProvider extends CompletionContributor {
                 });
             }
         };
+
+        private final double priority;
+
+        LookupElementStyle(double priority) {
+            this.priority = priority;
+        }
+
+        public double getPriority(){
+            return priority;
+        }
 
         public abstract LookupElementDecorator<LookupElement> apply(LookupElement lookupElement);
     }
@@ -138,8 +148,8 @@ public class BuilderCompletionProvider extends CompletionContributor {
                     invokedBuilderMethods.addAll(getInvokedBuilderMethods(parameters, builderMethods));
                 }
 
-                LookupElementStyleSelector styleSelector = getStyleSelector(lookupPsiMethodElement);
-                LookupElementDecorator<LookupElement> decoratedLookupElement = styleSelector.select(builderMethods, invokedBuilderMethods, lookupPsiMethodElement)
+                LookupElementDecorator<LookupElement> decoratedLookupElement = getStyleSelector(lookupPsiMethodElement)
+                        .select(builderMethods, invokedBuilderMethods, lookupPsiMethodElement)
                         .apply(lookupElement);
                 completionResult = completionResult.withLookupElement(decoratedLookupElement);
             }
