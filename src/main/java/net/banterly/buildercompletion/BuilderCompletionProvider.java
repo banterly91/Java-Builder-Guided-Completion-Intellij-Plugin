@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class BuilderCompletionProvider extends CompletionContributor {
 
-    private enum LookupElementStyle {
+     enum LookupElementStyle {
         INVALID(1000) {
             @Override
             public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
