@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 public class BuilderCompletionProvider extends CompletionContributor {
 
-     enum LookupElementStyle {
+    enum LookupElementStyle {
         INVALID(1000) {
             @Override
             public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
@@ -71,7 +71,7 @@ public class BuilderCompletionProvider extends CompletionContributor {
             this.priority = priority;
         }
 
-        public double getPriority(){
+        public double getPriority() {
             return priority;
         }
 
@@ -137,13 +137,12 @@ public class BuilderCompletionProvider extends CompletionContributor {
 
         result.runRemainingContributors(parameters, completionResult -> {
             LookupElement lookupElement = completionResult.getLookupElement();
-            if (isProducedByJavaCompletion(lookupElement) &&
-                    lookupElement.getPsiElement() instanceof PsiMethod &&
+            if (lookupElement.getPsiElement() instanceof PsiMethod &&
                     isFromBuilderClass((PsiMethod) lookupElement.getPsiElement())) {
                 PsiMethod lookupPsiMethodElement = (PsiMethod) lookupElement.getPsiElement();
                 PsiClass builderClassPsi = (PsiClass) lookupPsiMethodElement.getParent();
 
-                if (builderMethods.isEmpty() && invokedBuilderMethods.isEmpty()){
+                if (builderMethods.isEmpty() && invokedBuilderMethods.isEmpty()) {
                     builderMethods.addAll(Arrays.asList(builderClassPsi.getAllMethods()));
                     invokedBuilderMethods.addAll(getInvokedBuilderMethods(parameters, builderMethods));
                 }
@@ -155,10 +154,6 @@ public class BuilderCompletionProvider extends CompletionContributor {
             }
             finalResult.passResult(completionResult);
         });
-    }
-
-    private static boolean isProducedByJavaCompletion(final LookupElement lookupElement) {
-        return lookupElement.getUserData(BaseCompletionService.LOOKUP_ELEMENT_CONTRIBUTOR) instanceof JavaCompletionContributor;
     }
 
     private static boolean isFromBuilderClass(final PsiMethod psiMethod) {
