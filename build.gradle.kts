@@ -119,9 +119,9 @@ tasks {
         // Default args for IDEA installation
         //   jvmArgs("-Xmx768m", "-XX:+UseConcMarkSweepGC", "-XX:SoftRefLRUPolicyMSPerMB=50")
         // Disable auto plugin resloading. See `com.intellij.ide.plugins.DynamicPluginVfsListener`
-        jvmArgs("-Didea.auto.reload.plugins=false")
+        // jvmArgs("-Didea.auto.reload.plugins=false")
         // uncomment if `unexpected exception ProcessCanceledException` prevents you from debugging a running IDE
-        jvmArgs("-Didea.ProcessCanceledException=disabled")
+        //jvmArgs("-Didea.ProcessCanceledException=disabled")
     }
 
     publishPlugin {
