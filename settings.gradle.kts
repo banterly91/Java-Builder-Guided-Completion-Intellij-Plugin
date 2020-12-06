@@ -1,1 +1,1 @@
-rootProject.name = "mandatory-builder-fields-intellij-plugin"
+rootProject.name = "builder-guided-completion-plugin"

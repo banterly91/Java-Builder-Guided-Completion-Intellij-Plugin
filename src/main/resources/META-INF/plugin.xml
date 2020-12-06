@@ -1,7 +1,7 @@
 <idea-plugin>
-    <id>com.github.banterly91.mandatorybuilderfieldsintellijplugin</id>
-    <name>mandatory-builder-fields-intellij</name>
-    <vendor>banterly91</vendor>
+    <id>net.banterly.builderguidedcompletionplugin</id>
+    <name>Builder Guided Completion</name>
+    <vendor>banterly</vendor>
 
     <!-- Product and plugin compatibility requirements -->
     <!-- https://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html -->
