@@ -8,8 +8,7 @@ public class TestSetupClass {
 
         ClassWithABuilder.Builder builder = new ClassWithABuilder.Builder();
 
-        builder.withStringList(new ArrayList<>())
-                .withStringListItem("testItem")
+        builder.withStringListItem("testItem")
                 .withDoubleField1(2).<caret>;
     }
 }

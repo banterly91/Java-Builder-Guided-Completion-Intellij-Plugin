@@ -6,7 +6,6 @@ public class TestSetupClass {
 
         ClassWithABuilder.Builder builder = new ClassWithABuilder.Builder();
 
-        builder.withDoubleField1(2)
-                .withStringListItem("testItem").<caret>;
+        builder.withStringListItem("testItem").<caret>;
     }
 }
