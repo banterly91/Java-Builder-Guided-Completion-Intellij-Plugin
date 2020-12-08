@@ -6,15 +6,10 @@ import com.intellij.codeInsight.lookup.*;
 import com.intellij.psi.*;
 
 import com.intellij.psi.util.PsiTreeUtil;
-import net.banterly.buildercompletion.annotations.BuildMethod;
-import net.banterly.buildercompletion.annotations.BuilderClass;
-import net.banterly.buildercompletion.annotations.MandatoryBuilderMethod;
-import net.banterly.buildercompletion.annotations.RepeatableBuilderMethod;
+import net.banterly.buildercompletion.annotations.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BuilderCompletionProvider extends CompletionContributor {
@@ -49,7 +44,7 @@ public class BuilderCompletionProvider extends CompletionContributor {
                     }
                 });
             }
-        }, MANDATORY(1002) {
+        }, REQUIRED(1002) {
             @Override
             public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
                 LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, getPriority());
@@ -59,7 +54,7 @@ public class BuilderCompletionProvider extends CompletionContributor {
                         element.getDelegate().renderElement(presentation);
                         presentation.setItemTextBold(true);
                         presentation.setItemTextUnderlined(true);
-                        presentation.appendTailTextItalic("  Mandatory", false);
+                        presentation.appendTailTextItalic("  Required", false);
                     }
                 });
             }
@@ -81,28 +76,31 @@ public class BuilderCompletionProvider extends CompletionContributor {
     private enum LookupElementStyleSelector {
         MANDATORY_METHOD {
             @Override
-            public LookupElementStyle select(final Set<PsiMethod> builderMethods, final Set<PsiMethod> invokedBuilderMethods, final PsiMethod psiMethod) {
+            public LookupElementStyle select(final Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes, final Set<PsiMethod> invokedBuilderMethods, final PsiMethod psiMethod) {
+                BuilderMethodAnnotationAttributes annotationAttributes = builderMethods2AnnotationAttributes.get(psiMethod);
+                if (invokedBuilderMethods.stream().anyMatch(m -> annotationAttributes.getIncompatibleMethods().contains(m.getName()))) {
+                    return LookupElementStyle.INVALID;
+                }
                 boolean isMethodInvoked = invokedBuilderMethods.contains(psiMethod);
                 if (isMethodInvoked) {
-                    boolean isMethodInvocationRepeatable = psiMethod.getAnnotation(RepeatableBuilderMethod.class.getCanonicalName()) != null;
-                    if (isMethodInvocationRepeatable) {
+                    if (builderMethods2AnnotationAttributes.get(psiMethod).isRepeatable()) {
                         return LookupElementStyle.OPTIONAL;
                     } else {
                         return LookupElementStyle.INVALID;
                     }
                 } else {
-                    return LookupElementStyle.MANDATORY;
+                    return LookupElementStyle.REQUIRED;
                 }
             }
-        }, BUILDER_METHOD {
+        }, BUILD_METHOD {
             @Override
-            public LookupElementStyle select(final Set<PsiMethod> builderMethods, final Set<PsiMethod> invokedBuilderMethods, final PsiMethod psiMethod) {
-                if (builderMethods.stream()
-                        .filter(m -> m.getAnnotation(MandatoryBuilderMethod.class.getCanonicalName()) != null)
-                        .allMatch(invokedBuilderMethods::contains)) {
-
+            public LookupElementStyle select(final Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes, final Set<PsiMethod> invokedBuilderMethods, final PsiMethod psiMethod) {
+                boolean areAllMandatoryMethodsInvoked = builderMethods2AnnotationAttributes.entrySet().stream()
+                        .filter(e -> e.getValue().getType() == BuilderMethod.Type.MANDATORY)
+                        .allMatch(e -> invokedBuilderMethods.contains(e.getKey()) || invokedBuilderMethods.stream().anyMatch(invokedMethod -> e.getValue().getIncompatibleMethods().contains(invokedMethod.getName())));
+                if (areAllMandatoryMethodsInvoked) {
                     if (!invokedBuilderMethods.contains(psiMethod)) {
-                        return LookupElementStyle.MANDATORY;
+                        return LookupElementStyle.REQUIRED;
                     } else {
                         return LookupElementStyle.OPTIONAL;
                     }
@@ -112,11 +110,16 @@ public class BuilderCompletionProvider extends CompletionContributor {
             }
         }, OPTIONAL_METHOD {
             @Override
-            public LookupElementStyle select(final Set<PsiMethod> builderMethods, final Set<PsiMethod> invokedBuilderMethods, final PsiMethod psiMethod) {
+            public LookupElementStyle select(final Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes, final Set<PsiMethod> invokedBuilderMethods, final PsiMethod psiMethod) {
+                BuilderMethodAnnotationAttributes annotationAttributes = builderMethods2AnnotationAttributes.get(psiMethod);
+                if (invokedBuilderMethods.stream().anyMatch(m -> annotationAttributes.getIncompatibleMethods().contains(m.getName()))) {
+                    return LookupElementStyle.INVALID;
+                }
+
                 if (!invokedBuilderMethods.contains(psiMethod)) {
                     return LookupElementStyle.OPTIONAL;
                 } else {
-                    if (psiMethod.getAnnotation(RepeatableBuilderMethod.class.getCanonicalName()) != null) {
+                    if (builderMethods2AnnotationAttributes.get(psiMethod).isRepeatable()) {
                         return LookupElementStyle.OPTIONAL;
                     } else {
                         return LookupElementStyle.INVALID;
@@ -125,30 +128,28 @@ public class BuilderCompletionProvider extends CompletionContributor {
             }
         };
 
-        public abstract LookupElementStyle select(Set<PsiMethod> builderMethods, Set<PsiMethod> invokedBuilderMethods, PsiMethod lookupPsiElement);
+        public abstract LookupElementStyle select(Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes, Set<PsiMethod> invokedBuilderMethods, PsiMethod lookupPsiElement);
     }
 
     @Override
     public void fillCompletionVariants(@NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
         final CompletionResultSet finalResult = result;
 
-        Set<PsiMethod> builderMethods = new HashSet<>();
+        Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes = new HashMap<>();
         Set<PsiMethod> invokedBuilderMethods = new HashSet<>();
 
         result.runRemainingContributors(parameters, completionResult -> {
             LookupElement lookupElement = completionResult.getLookupElement();
             if (lookupElement.getPsiElement() instanceof PsiMethod &&
-                    isFromBuilderClass((PsiMethod) lookupElement.getPsiElement())) {
+                    isBuilderMethod((PsiMethod) lookupElement.getPsiElement())) {
                 PsiMethod lookupPsiMethodElement = (PsiMethod) lookupElement.getPsiElement();
-                PsiClass builderClassPsi = (PsiClass) lookupPsiMethodElement.getParent();
 
-                if (builderMethods.isEmpty() && invokedBuilderMethods.isEmpty()) {
-                    builderMethods.addAll(Arrays.asList(builderClassPsi.getAllMethods()));
-                    invokedBuilderMethods.addAll(getInvokedBuilderMethods(parameters, builderMethods));
+                if (builderMethods2AnnotationAttributes.isEmpty() || invokedBuilderMethods.isEmpty()) {
+                    populateMethodDataCaches(builderMethods2AnnotationAttributes, invokedBuilderMethods, lookupPsiMethodElement, parameters);
                 }
 
-                LookupElementDecorator<LookupElement> decoratedLookupElement = getStyleSelector(lookupPsiMethodElement)
-                        .select(builderMethods, invokedBuilderMethods, lookupPsiMethodElement)
+                LookupElementDecorator<LookupElement> decoratedLookupElement = getStyleSelector(lookupPsiMethodElement, builderMethods2AnnotationAttributes.get(lookupPsiMethodElement))
+                        .select(builderMethods2AnnotationAttributes, invokedBuilderMethods, lookupPsiMethodElement)
                         .apply(lookupElement);
                 completionResult = completionResult.withLookupElement(decoratedLookupElement);
             }
@@ -156,9 +157,41 @@ public class BuilderCompletionProvider extends CompletionContributor {
         });
     }
 
-    private static boolean isFromBuilderClass(final PsiMethod psiMethod) {
+    private void populateMethodDataCaches(final Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes, final Set<PsiMethod> invokedBuilderMethods, PsiElement lookupPsiMethodElement, final CompletionParameters parameters) {
+        PsiClass builderClassPsi = (PsiClass) lookupPsiMethodElement.getParent();
+        builderMethods2AnnotationAttributes.putAll(Arrays.stream(builderClassPsi.getAllMethods())
+                .filter(m -> m.hasAnnotation(BuilderMethod.class.getCanonicalName()))
+                .collect(Collectors.toMap(method -> method,
+                        method -> {
+                            PsiAnnotation annotation = method.getAnnotation(BuilderMethod.class.getCanonicalName());
+                            BuilderMethod.Type type = BuilderMethod.Type.valueOf(annotation.findAttributeValue("type").getReference().resolve().getText());
+                            boolean isRepeatable = "true".equals(annotation.findAttributeValue("repeatable").getText());
+                            Set<String> incompatibleMethods = getIncompatibleMethods(annotation);
+                            return new BuilderMethodAnnotationAttributes(type, isRepeatable, incompatibleMethods);
+                        })));
+
+        invokedBuilderMethods.addAll(getInvokedBuilderMethods(parameters, builderMethods2AnnotationAttributes.keySet()));
+    }
+
+    private Set<String> getIncompatibleMethods(PsiAnnotation annotation) {
+        PsiAnnotationMemberValue incompatibleWithValue = annotation.findAttributeValue("incompatibleWith");
+        if (incompatibleWithValue instanceof PsiArrayInitializerMemberValue) {
+            return Arrays.stream(((PsiArrayInitializerMemberValue) incompatibleWithValue)
+                    .getInitializers())
+                    .map(v -> (String) ((PsiLiteral) v).getValue())
+                    .collect(Collectors.toSet());
+        } else if (incompatibleWithValue instanceof PsiLiteral) {
+            String singleValue = (String) ((PsiLiteral) incompatibleWithValue).getValue();
+            if (!singleValue.isEmpty()) {
+                return Collections.singleton((String) ((PsiLiteral) incompatibleWithValue).getValue());
+            }
+        }
+        return Collections.emptySet();
+    }
+
+    private static boolean isBuilderMethod(final PsiMethod psiMethod) {
         if (psiMethod.getParent() instanceof PsiClass) {
-            return ((PsiClass) psiMethod.getParent()).getAnnotation(BuilderClass.class.getCanonicalName()) != null;
+            return ((PsiClass) psiMethod.getParent()).hasAnnotation(BuilderClass.class.getCanonicalName()) && (psiMethod.hasAnnotation(BuilderMethod.class.getCanonicalName()) || psiMethod.hasAnnotation(BuildMethod.class.getCanonicalName()));
         }
         return false;
     }
@@ -178,13 +211,11 @@ public class BuilderCompletionProvider extends CompletionContributor {
         })).map(e -> ((PsiMethodCallExpression) e).resolveMethod()).collect(Collectors.toSet());
     }
 
-    private static LookupElementStyleSelector getStyleSelector(final PsiMethod psiMethod) {
-        boolean isMandatoryMethod = psiMethod.getAnnotation(MandatoryBuilderMethod.class.getCanonicalName()) != null;
-        boolean isBuilderMethod = psiMethod.getAnnotation(BuildMethod.class.getCanonicalName()) != null;
-        if (isMandatoryMethod) {
+    private static LookupElementStyleSelector getStyleSelector(final PsiMethod psiMethod, final BuilderMethodAnnotationAttributes annotationAttributes) {
+        if (psiMethod.hasAnnotation(BuildMethod.class.getCanonicalName())) {
+            return LookupElementStyleSelector.BUILD_METHOD;
+        } else if (BuilderMethod.Type.MANDATORY == annotationAttributes.getType()) {
             return LookupElementStyleSelector.MANDATORY_METHOD;
-        } else if (isBuilderMethod) {
-            return LookupElementStyleSelector.BUILDER_METHOD;
         } else {
             return LookupElementStyleSelector.OPTIONAL_METHOD;
         }
