@@ -24,15 +24,15 @@ The user of the Builder API will have a guided experience through the auto-compl
   <kbd>Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
 
 
-##Usage
+## Usage
 After installing this plugin, 4 annotations will be available for you and they should be used as follows:
-#####@BuilderClass
+##### @BuilderClass
 Used to mark the builder class
 ```java
 @BuilderClass
 public class Builder{}
 ```
-#####@MandatoryBuilderMethod
+##### @MandatoryBuilderMethod
 Used to mark the methods that must be called in order for the Builder to have enough data to construct a valid object. All methods not having this annotation are considered optional(except the build method)
 ```java
 @BuilderClass
@@ -50,7 +50,7 @@ public Builder withOptionalValue(int optionalValue) {
 }
 ```
 
-#####@RepeatableBuilderMethod
+##### @RepeatableBuilderMethod
 Used to mark the methods that can be called multiple times(e.g. a method that adds items to a list field). This can be applied to both optional and mandatory methods.
 ```java
 @BuilderClass
@@ -70,7 +70,7 @@ public Builder withOptionalValue(int optionalValue) {
 }
 ```
 
-#####@BuildMethod
+##### @BuildMethod
 Used to mark the build method of a builder.
 ```java
 @BuilderClass
@@ -103,10 +103,10 @@ In general the grouping is done as you might expect, but for those curious the e
     * methods not marked with `@RepeatableBuilderMethod` that have already been invoked
     * method marked with `@BuildMethod` when not all methods marked with `@MandatoryBuilderMethod`
 
-##Roadmap
+## Roadmap
 This is just the first version of the plugin, so it comes with a couple of limitations which are planned to be fixed, especially if this plugin starts getting some usage.
 The following will likely be included in a future release:
-#####Improve categorization algorithm 
+##### Improve categorization algorithm 
 Right now to determine what methods have been invoked or not we just look at all code present before the caret position, without taking into consideration possible if blocks or other constructs. This can be problematic in a couple of cases, like the following:
 ```java
 /// other code
@@ -121,10 +121,10 @@ if(condition){
 With the current way the plugin runs, when trying to get the completion list for the builder in the else branch of the if condition we would see the `withNonRepeatableMandatoryField` marked as invalid since we consider it called in the first branch which is obviously not correct. 
 There are a couple of approaches to support more advances cases like this, and they are a priority for the next release.
 
-#####Advanced Builder Guidance
+##### Advanced Builder Guidance
 We could have cases where a builder could have multiple construction paths. For example if `methodA` is called then we can call only `methodB` on the builder, but if `methodC` is called then only `methodD` can be further called on the Builder. This is also high on the priority list for the next release.
 
-#####Paired methods
+##### Paired methods
 We can have cases where two methods could both satisfy a mandatory requirement, so after one is called the other one should be considered invalid or optional depending on the context.
 Consider the following case:
 ```java
@@ -147,7 +147,7 @@ public class Builder {
 ```
 In the above case it makes sense that if `withValues` is called, we should not be required to call `withValue`. I like to call this ones as paired methods, and handling this case is also on the list for the next release.
 
-#####Other Issues requested by users
+##### Other Issues requested by users
 If there are any other issues that are requested by the users, they will get priority first. 
 
 If anyone wants to contribute via Pull Requests please do so.
