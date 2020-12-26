@@ -135,6 +135,8 @@ After annotating the Builder class, the completion popup will categorize all ann
 * optional methods: will be after the required methods in the list and presented only in bold with no underline
 * invalid methods: will be at the bottom of the list and presented with a strikeout line
 
+The completion order provided by Intellij might be a little different from what was described above I and will work in the future to make it consistent, but the Intellij API is not very friendly regarding this topic.
+
 ![Completion example](docs/images/example.PNG)
 
 In general the grouping is done as you might expect, but for those curious the exact rules are these:
@@ -165,23 +167,12 @@ In general the grouping is done as you might expect, but for those curious the e
 ## Roadmap
 This is just the first version of the plugin, so it comes with a couple of limitations which are planned to be fixed, especially if this plugin starts getting some usage.
 The following will likely be included in a future release:
-##### Improve categorization algorithm 
-Right now to determine what methods have been invoked or not we just look at all code present before the caret position, without taking into consideration possible if blocks or other constructs. This can be problematic in a couple of cases, like the following:
-```java
-/// other code
-Builder = new ClassWithABuilder.Builder();
-if(condition){
-    builder.withNonRepeatableMandatoryField("value1");
-} else {
-    builder.withNonRepeatableMandatoryField("value2");
-}
-///other code
-```
-With the current way the plugin runs, when trying to get the completion list for the builder in the else branch of the if condition we would see the `withNonRepeatableMandatoryField` marked as invalid since we consider it called in the first branch which is obviously not correct. 
-There are a couple of approaches to support more advances cases like this, and they are a priority for the next release.
 
 ##### Advanced Builder Guidance
-We could have cases where a builder could have multiple construction paths. For example if `methodA` is called then we can call only `methodB` on the builder, but if `methodC` is called then only `methodD` can be further called on the Builder. This is also high on the priority list for the next release.
+We could have cases where a builder could have multiple construction paths. For example if `methodA` is called then we can call only `methodB` on the builder, but if `methodC` is called then only `methodD` can be further called on the Builder. 
+
+##### Fix Inconsistent Sorting
+As mentioned above this issue can appear from time to time and work is planned to fix it.
 
 ##### Other Issues requested by users
 If there are any other issues that are requested by the users, they will get priority first. 
