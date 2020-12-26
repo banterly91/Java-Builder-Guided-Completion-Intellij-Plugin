@@ -6,6 +6,7 @@ import com.intellij.codeInsight.lookup.*;
 import com.intellij.psi.*;
 
 import com.intellij.psi.util.PsiTreeUtil;
+import com.intellij.ui.JBColor;
 import net.banterly.buildercompletion.annotations.*;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,6 +24,7 @@ public class BuilderCompletionProvider extends CompletionContributor {
                     @Override
                     public void renderElement(LookupElementDecorator<LookupElement> element, LookupElementPresentation presentation) {
                         element.getDelegate().renderElement(presentation);
+                        presentation.setItemTextForeground(JBColor.RED);
                         presentation.setItemTextBold(false);
                         presentation.setItemTextUnderlined(false);
                         presentation.setStrikeout(true);
@@ -52,6 +54,7 @@ public class BuilderCompletionProvider extends CompletionContributor {
                     @Override
                     public void renderElement(LookupElementDecorator<LookupElement> element, LookupElementPresentation presentation) {
                         element.getDelegate().renderElement(presentation);
+                        presentation.setItemTextForeground(JBColor.BLUE);
                         presentation.setItemTextBold(true);
                         presentation.setItemTextUnderlined(true);
                         presentation.appendTailTextItalic("  Required", false);
