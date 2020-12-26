@@ -198,17 +198,10 @@ public class BuilderCompletionProvider extends CompletionContributor {
 
     private static Set<PsiMethod> getInvokedBuilderMethods(final CompletionParameters parameters, final Set<PsiMethod> builderMethods) {
         PsiElement currentElement = parameters.getPosition();
-        PsiElement enclosingMethod = PsiTreeUtil.getParentOfType(currentElement, PsiMethod.class);
-        return Arrays.stream(PsiTreeUtil.collectElements(enclosingMethod, element -> {
-            if (element.getTextRange().getEndOffset() > parameters.getOffset()) {
-                return false;
-            }
-            if (element instanceof PsiMethodCallExpression) {
-                PsiMethodCallExpression methodCall = (PsiMethodCallExpression) element;
-                return builderMethods.contains(methodCall.resolveMethod());
-            }
-            return false;
-        })).map(e -> ((PsiMethodCallExpression) e).resolveMethod()).collect(Collectors.toSet());
+        PsiCodeBlock enclosingCodeBlock = PsiTreeUtil.getParentOfType(currentElement, PsiMethod.class).getBody();
+        InvokedBuilderMethodVisitor invokedBuilderMethodVisitor = new InvokedBuilderMethodVisitor(builderMethods, parameters.getOffset());
+        enclosingCodeBlock.accept(invokedBuilderMethodVisitor);
+        return invokedBuilderMethodVisitor.getDefinitelyInvokedMethodsAtNode(enclosingCodeBlock);
     }
 
     private static LookupElementStyleSelector getStyleSelector(final PsiMethod psiMethod, final BuilderMethodAnnotationAttributes annotationAttributes) {
