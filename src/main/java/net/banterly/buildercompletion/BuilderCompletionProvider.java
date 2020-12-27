@@ -3,6 +3,7 @@ package net.banterly.buildercompletion;
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
 
+import com.intellij.openapi.util.Pair;
 import com.intellij.psi.*;
 
 import com.intellij.psi.util.PsiTreeUtil;
@@ -18,7 +19,7 @@ public class BuilderCompletionProvider extends CompletionContributor {
     enum LookupElementStyle {
         INVALID(1000) {
             @Override
-            public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
+            public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement, boolean isPossiblyInvoked) {
                 LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, getPriority());
                 return LookupElementDecorator.withRenderer(prioritizedLookupElement, new LookupElementRenderer<LookupElementDecorator<LookupElement>>() {
                     @Override
@@ -34,7 +35,7 @@ public class BuilderCompletionProvider extends CompletionContributor {
             }
         }, OPTIONAL(1001) {
             @Override
-            public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
+            public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement, boolean isPossiblyInvoked) {
                 LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, getPriority());
                 return LookupElementDecorator.withRenderer(prioritizedLookupElement, new LookupElementRenderer<LookupElementDecorator<LookupElement>>() {
                     @Override
@@ -42,13 +43,14 @@ public class BuilderCompletionProvider extends CompletionContributor {
                         element.getDelegate().renderElement(presentation);
                         presentation.setItemTextBold(true);
                         presentation.setItemTextUnderlined(false);
-                        presentation.appendTailTextItalic("  Optional", false);
+                        String extraAppend = isPossiblyInvoked ? POSSIBLE_REPEATED_INVOCATION_WARNING : "";
+                        presentation.appendTailTextItalic(String.format("  Optional%s", extraAppend), false);
                     }
                 });
             }
         }, REQUIRED(1002) {
             @Override
-            public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement) {
+            public LookupElementDecorator<LookupElement> apply(final LookupElement lookupElement, boolean isPossiblyInvoked) {
                 LookupElement prioritizedLookupElement = PrioritizedLookupElement.withPriority(lookupElement, getPriority());
                 return LookupElementDecorator.withRenderer(prioritizedLookupElement, new LookupElementRenderer<LookupElementDecorator<LookupElement>>() {
                     @Override
@@ -57,13 +59,15 @@ public class BuilderCompletionProvider extends CompletionContributor {
                         presentation.setItemTextForeground(JBColor.BLUE);
                         presentation.setItemTextBold(true);
                         presentation.setItemTextUnderlined(true);
-                        presentation.appendTailTextItalic("  Required", false);
+                        String extraAppend = isPossiblyInvoked ? POSSIBLE_REPEATED_INVOCATION_WARNING : "";
+                        presentation.appendTailTextItalic(String.format("  Required%s", extraAppend), false);
                     }
                 });
             }
         };
 
         private final double priority;
+        private static final String POSSIBLE_REPEATED_INVOCATION_WARNING = ", non-repeatable and possibly already invoked!";
 
         LookupElementStyle(double priority) {
             this.priority = priority;
@@ -73,7 +77,7 @@ public class BuilderCompletionProvider extends CompletionContributor {
             return priority;
         }
 
-        public abstract LookupElementDecorator<LookupElement> apply(LookupElement lookupElement);
+        public abstract LookupElementDecorator<LookupElement> apply(LookupElement lookupElement, boolean isPossiblyInvoked);
     }
 
     private enum LookupElementStyleSelector {
@@ -139,7 +143,8 @@ public class BuilderCompletionProvider extends CompletionContributor {
         final CompletionResultSet finalResult = result;
 
         Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes = new HashMap<>();
-        Set<PsiMethod> invokedBuilderMethods = new HashSet<>();
+        Set<PsiMethod> definitelyInvokedBuilderMethods = new HashSet<>();
+        Set<PsiMethod> possiblyInvokedBuilderMethods = new HashSet<>();
 
         result.runRemainingContributors(parameters, completionResult -> {
             LookupElement lookupElement = completionResult.getLookupElement();
@@ -147,20 +152,23 @@ public class BuilderCompletionProvider extends CompletionContributor {
                     isBuilderMethod((PsiMethod) lookupElement.getPsiElement())) {
                 PsiMethod lookupPsiMethodElement = (PsiMethod) lookupElement.getPsiElement();
 
-                if (builderMethods2AnnotationAttributes.isEmpty() || invokedBuilderMethods.isEmpty()) {
-                    populateMethodDataCaches(builderMethods2AnnotationAttributes, invokedBuilderMethods, lookupPsiMethodElement, parameters);
+                if (builderMethods2AnnotationAttributes.isEmpty()) {
+                    populateMethodDataCaches(builderMethods2AnnotationAttributes, definitelyInvokedBuilderMethods, possiblyInvokedBuilderMethods, lookupPsiMethodElement, parameters);
                 }
 
+                boolean isPossiblyInvoked = possiblyInvokedBuilderMethods.contains(lookupPsiMethodElement) &&
+                        !definitelyInvokedBuilderMethods.contains(lookupPsiMethodElement) &&
+                        !builderMethods2AnnotationAttributes.get(lookupPsiMethodElement).isRepeatable();
                 LookupElementDecorator<LookupElement> decoratedLookupElement = getStyleSelector(lookupPsiMethodElement, builderMethods2AnnotationAttributes.get(lookupPsiMethodElement))
-                        .select(builderMethods2AnnotationAttributes, invokedBuilderMethods, lookupPsiMethodElement)
-                        .apply(lookupElement);
+                        .select(builderMethods2AnnotationAttributes, definitelyInvokedBuilderMethods, lookupPsiMethodElement)
+                        .apply(lookupElement, isPossiblyInvoked);
                 completionResult = completionResult.withLookupElement(decoratedLookupElement);
             }
             finalResult.passResult(completionResult);
         });
     }
 
-    private void populateMethodDataCaches(final Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes, final Set<PsiMethod> invokedBuilderMethods, PsiElement lookupPsiMethodElement, final CompletionParameters parameters) {
+    private void populateMethodDataCaches(final Map<PsiMethod, BuilderMethodAnnotationAttributes> builderMethods2AnnotationAttributes, final Set<PsiMethod> definitelyInvokedBuilderMethods, final Set<PsiMethod> possiblyInvokedBuilderMethods, PsiElement lookupPsiMethodElement, final CompletionParameters parameters) {
         PsiClass builderClassPsi = (PsiClass) lookupPsiMethodElement.getParent();
         builderMethods2AnnotationAttributes.putAll(Arrays.stream(builderClassPsi.getAllMethods())
                 .filter(m -> m.hasAnnotation(BuilderMethod.class.getCanonicalName()))
@@ -173,7 +181,9 @@ public class BuilderCompletionProvider extends CompletionContributor {
                             return new BuilderMethodAnnotationAttributes(type, isRepeatable, incompatibleMethods);
                         })));
 
-        invokedBuilderMethods.addAll(getInvokedBuilderMethods(parameters, builderMethods2AnnotationAttributes.keySet()));
+        Pair<Set<PsiMethod>, Set<PsiMethod>> definitelyAndPossiblyInvokedBuilderMethods = getInvokedBuilderMethods(parameters, builderMethods2AnnotationAttributes.keySet());
+        definitelyInvokedBuilderMethods.addAll(definitelyAndPossiblyInvokedBuilderMethods.getFirst());
+        possiblyInvokedBuilderMethods.addAll(definitelyAndPossiblyInvokedBuilderMethods.getSecond());
     }
 
     private Set<String> getIncompatibleMethods(PsiAnnotation annotation) {
@@ -199,12 +209,11 @@ public class BuilderCompletionProvider extends CompletionContributor {
         return false;
     }
 
-    private static Set<PsiMethod> getInvokedBuilderMethods(final CompletionParameters parameters, final Set<PsiMethod> builderMethods) {
+    private static Pair<Set<PsiMethod>, Set<PsiMethod>> getInvokedBuilderMethods(final CompletionParameters parameters, final Set<PsiMethod> builderMethods) {
         PsiElement currentElement = parameters.getPosition();
         PsiCodeBlock enclosingCodeBlock = PsiTreeUtil.getParentOfType(currentElement, PsiMethod.class).getBody();
-        InvokedBuilderMethodVisitor invokedBuilderMethodVisitor = new InvokedBuilderMethodVisitor(builderMethods, parameters.getOffset());
-        enclosingCodeBlock.accept(invokedBuilderMethodVisitor);
-        return invokedBuilderMethodVisitor.getDefinitelyInvokedMethodsAtNode(enclosingCodeBlock);
+        InvokedBuilderMethodVisitor invokedBuilderMethodVisitor = new InvokedBuilderMethodVisitor(enclosingCodeBlock, builderMethods, parameters.getOffset());
+        return Pair.create(invokedBuilderMethodVisitor.getDefinitelyInvokedMethods(), invokedBuilderMethodVisitor.getPossiblyInvokedBuilderMethods());
     }
 
     private static LookupElementStyleSelector getStyleSelector(final PsiMethod psiMethod, final BuilderMethodAnnotationAttributes annotationAttributes) {

@@ -7,12 +7,15 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.util.*;
 
 public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements PsiRecursiveVisitor {
+    PsiElement psiTreeEntryNode;
     Map<PsiElement, Set<PsiMethod>> psiElement2DefinitelyInvokedBuilderMethods = new HashMap<>();
+    Set<PsiMethod> possiblyInvokedBuilderMethods = new HashSet<>();
     private boolean currentElementFound = false;
     Set<PsiMethod> builderMethods;
     int endOffset;
 
-    InvokedBuilderMethodVisitor(Set<PsiMethod> builderMethods, int endOffset) {
+    InvokedBuilderMethodVisitor(PsiElement psiTreeEntryNode, Set<PsiMethod> builderMethods, int endOffset) {
+        this.psiTreeEntryNode = psiTreeEntryNode;
         this.builderMethods = builderMethods;
         this.endOffset = endOffset;
     }
@@ -63,6 +66,7 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
                 }
             }
         }
+        possiblyInvokedBuilderMethods.addAll(definitelyInvokedBuilderMethods);
         psiElement2DefinitelyInvokedBuilderMethods.put(statement, definitelyInvokedBuilderMethods);
     }
 
@@ -86,6 +90,7 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
 
             }
         }
+        possiblyInvokedBuilderMethods.addAll(definitelyInvokedBuilderMethods);
         psiElement2DefinitelyInvokedBuilderMethods.put(statement, definitelyInvokedBuilderMethods);
     }
 
@@ -120,6 +125,21 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
         statement.getBody().accept(this);
         Set<PsiMethod> definitelyInvokedBuilderMethods = psiElement2DefinitelyInvokedBuilderMethods.get(statement.getBody());
         psiElement2DefinitelyInvokedBuilderMethods.put(statement, definitelyInvokedBuilderMethods);
+    }
+
+    @Override
+    public void visitWhileStatement(PsiWhileStatement statement){
+        statement.getBody().accept(this);
+    }
+
+    @Override
+    public void visitForStatement(PsiForStatement statement) {
+        statement.getBody().accept(this);
+    }
+
+    @Override
+    public void visitForeachStatement(PsiForeachStatement statement) {
+        statement.getBody().accept(this);
     }
 
     @Override
@@ -183,8 +203,18 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
         switchCasesWithNoBreak.clear();
     }
 
-    public Set<PsiMethod> getDefinitelyInvokedMethodsAtNode(PsiElement psiElement) {
-        return psiElement2DefinitelyInvokedBuilderMethods.get(psiElement);
+    public Set<PsiMethod> getDefinitelyInvokedMethods() {
+        if(!psiElement2DefinitelyInvokedBuilderMethods.containsKey(psiTreeEntryNode)){
+            psiTreeEntryNode.accept(this);
+        }
+        return psiElement2DefinitelyInvokedBuilderMethods.get(psiTreeEntryNode);
+    }
+
+    public Set<PsiMethod> getPossiblyInvokedBuilderMethods() {
+        if(!psiElement2DefinitelyInvokedBuilderMethods.containsKey(psiTreeEntryNode)){
+            psiTreeEntryNode.accept(this);
+        }
+        return possiblyInvokedBuilderMethods;
     }
 
 }
