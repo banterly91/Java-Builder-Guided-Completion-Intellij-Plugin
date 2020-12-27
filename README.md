@@ -137,7 +137,7 @@ After annotating the Builder class, the completion popup will categorize all ann
 
 The completion order provided by Intellij might be a little different from what was described above I and will work in the future to make it consistent, but the Intellij API is not very friendly regarding this topic.
 
-![Completion example](docs/images/example.PNG)
+![Completion example](docs/images/example1AutoCompletion.PNG)
 
 In general the grouping is done as you might expect, but for those curious the exact rules are these:
 * **required methods**
