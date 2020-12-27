@@ -102,4 +102,45 @@ public class BuilderCompletionProviderTest extends LightJavaCodeInsightFixtureTe
         //build method and no mandatory methods have been invoked so we expect it to be marked as invalid
         Assert.assertEquals(INVALID.getPriority(), lookupElementName2Priority.get("build"), 0.0);
     }
+
+    @Test
+    public void testCodeStructuresWithPossiblyInvokedBuilderMethods(){
+
+        //the class setting up the scenario invokes all required methods, but inside statements like if and switch without a catch call case, or not in all branches
+        myFixture.configureByFiles("CodeStructuresWithPossiblyInvokedMethods.java", "ClassWithABuilder.java", "BuilderMethod.java");
+
+        LookupElement[] lookupElements =  myFixture.completeBasic();
+
+        Map<String, Double> lookupElementName2Priority = Arrays.stream(lookupElements).collect(Collectors.toMap(LookupElement::getLookupString,
+                e -> ((PrioritizedLookupElement)((LookupElementDecorator) e).getDelegate()).getPriority()));
+
+        //mandatory repeatable method which was not definitely invoked so we expect to see it marked as required
+        Assert.assertEquals(REQUIRED.getPriority(), lookupElementName2Priority.get("withStringListItem"), 0.0);
+        //mandatory non-repeatable method which was not definitely invoked so we expect to see it marked as required
+        Assert.assertEquals(REQUIRED.getPriority(), lookupElementName2Priority.get("withStringList"), 0.0);
+        //mandatory non-repeatable method which was not definitely invoked so we expect to see it marked as required
+        Assert.assertEquals(REQUIRED.getPriority(), lookupElementName2Priority.get("withDoubleField1"), 0.0);
+        //build method and no mandatory methods have been definitely invoked so we expect it to be marked as invalid
+        Assert.assertEquals(INVALID.getPriority(), lookupElementName2Priority.get("build"), 0.0);
+    }
+
+    @Test
+    public void testCodeStructuresWithDefinitelyInvokedBuilderMethods(){
+        //the class setting up the scenario has definitely invoked all mandatory methods
+        myFixture.configureByFiles("CodeStructuresWithDefinitelyInvokedMethods.java", "ClassWithABuilder.java", "BuilderMethod.java");
+
+        LookupElement[] lookupElements =  myFixture.completeBasic();
+
+        Map<String, Double> lookupElementName2Priority = Arrays.stream(lookupElements).collect(Collectors.toMap(LookupElement::getLookupString,
+                e -> ((PrioritizedLookupElement)((LookupElementDecorator) e).getDelegate()).getPriority()));
+
+        //mandatory repeatable method which was definitely invoked so we expect to see it marked as optional
+        Assert.assertEquals(OPTIONAL.getPriority(), lookupElementName2Priority.get("withStringListItem"), 0.0);
+        //mandatory non-repeatable method which was not invoked, but it is incompatible with "withStringListItem" so we expect to see it marked as invalid
+        Assert.assertEquals(INVALID.getPriority(), lookupElementName2Priority.get("withStringList"), 0.0);
+        //mandatory non-repeatable method which was definitely invoked so we expect to see it marked as invalid
+        Assert.assertEquals(INVALID.getPriority(), lookupElementName2Priority.get("withDoubleField1"), 0.0);
+        //build method and all mandatory methods have been definitely invoked so we expect it to be marked as required
+        Assert.assertEquals(REQUIRED.getPriority(), lookupElementName2Priority.get("build"), 0.0);
+    }
 }
