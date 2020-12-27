@@ -171,6 +171,9 @@ The following will likely be included in a future release:
 ##### Advanced Builder Guidance
 We could have cases where a builder could have multiple construction paths. For example if `methodA` is called then we can call only `methodB` on the builder, but if `methodC` is called then only `methodD` can be further called on the Builder. 
 
+##### Show Warnings
+If an invalid method is invoked, I would like that to show of as a warning level issue in the IDE.
+
 ##### Fix Inconsistent Sorting
 As mentioned above this issue can appear from time to time and work is planned to fix it.
 
