@@ -11,6 +11,8 @@ This Intellij Plugin is designed to help you navigate the invocation of a [Build
 It allows the creator of the Builder API to specify what methods are mandatory and what methods can be invoked more than once.
 
 The user of the Builder API will have a guided experience through the auto-completion popup which will mark what methods are required, optional or invalid.
+
+![Completion example](docs/images/example1AutoCompletion.PNG)
 <!-- Plugin description end -->
 
 ## Usage
@@ -136,8 +138,6 @@ After annotating the Builder class, the completion popup will categorize all ann
 * invalid methods: will be at the bottom of the list and presented with a strikeout line
 
 The completion order provided by Intellij might be a little different from what was described above I and will work in the future to make it consistent, but the Intellij API is not very friendly regarding this topic.
-
-![Completion example](docs/images/example1AutoCompletion.PNG)
 
 In general the grouping is done as you might expect, but for those curious the exact rules are these:
 * **required methods**
