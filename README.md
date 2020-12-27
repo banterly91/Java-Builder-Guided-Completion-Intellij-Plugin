@@ -1,8 +1,8 @@
 # Builder Guided Completion Plugin
 
 ![Build](https://github.com/banterly91/Builder-Guided-Completion-Plugin/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/PLUGIN_ID.svg)](https://plugins.jetbrains.com/plugin/PLUGIN_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/15695.svg)](https://plugins.jetbrains.com/plugin/15695)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/15695.svg)](https://plugins.jetbrains.com/plugin/15695)
 
 
 <!-- Plugin description -->
