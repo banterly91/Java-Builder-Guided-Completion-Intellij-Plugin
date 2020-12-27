@@ -49,17 +49,17 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
     @Override
     public void visitDeclarationStatement(PsiDeclarationStatement statement) {
         Set<PsiMethod> definitelyInvokedBuilderMethods = new HashSet<>();
-        Collection<PsiMethodCallExpression> psiMethodCallExpressions = PsiTreeUtil.collectElementsOfType(statement, PsiMethodCallExpression.class);
+        PsiElement[] psiMethodCallExpressions = PsiTreeUtil.collectElements(statement, element -> element instanceof PsiMethodCallExpression);
 
-        if (psiMethodCallExpressions.isEmpty() && statement.getTextRange().getEndOffset() >= endOffset) {
+        if (psiMethodCallExpressions.length == 0 && statement.getTextRange().getEndOffset() >= endOffset) {
             currentElementFound = true;
         } else {
-            for (PsiMethodCallExpression psiMethodCallExpression : psiMethodCallExpressions) {
+            for (int i = psiMethodCallExpressions.length - 1; i >= 0; i--) {
+                PsiMethodCallExpression psiMethodCallExpression = (PsiMethodCallExpression) psiMethodCallExpressions[i];
                 PsiMethod psiMethod = psiMethodCallExpression.resolveMethod();
                 if (builderMethods.contains(psiMethod)) {
                     definitelyInvokedBuilderMethods.add(psiMethod);
                 }
-
                 if (psiMethodCallExpression.getTextRange().getEndOffset() >= endOffset - 1) {
                     currentElementFound = true;
                     break;
@@ -73,12 +73,13 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
     @Override
     public void visitExpressionStatement(PsiExpressionStatement statement) {
         Set<PsiMethod> definitelyInvokedBuilderMethods = new HashSet<>();
-        Collection<PsiMethodCallExpression> psiMethodCallExpressions = PsiTreeUtil.collectElementsOfType(statement, PsiMethodCallExpression.class);
+        PsiElement[] psiMethodCallExpressions = PsiTreeUtil.collectElements(statement, element -> element instanceof PsiMethodCallExpression);
 
-        if (psiMethodCallExpressions.isEmpty() && statement.getTextRange().getEndOffset() >= endOffset) {
+        if (psiMethodCallExpressions.length == 0 && statement.getTextRange().getEndOffset() >= endOffset) {
             currentElementFound = true;
         } else {
-            for (PsiMethodCallExpression psiMethodCallExpression : psiMethodCallExpressions) {
+            for (int i = psiMethodCallExpressions.length - 1; i >= 0; i--) {
+                PsiMethodCallExpression psiMethodCallExpression = (PsiMethodCallExpression) psiMethodCallExpressions[i];
                 PsiMethod psiMethod = psiMethodCallExpression.resolveMethod();
                 if (builderMethods.contains(psiMethod)) {
                     definitelyInvokedBuilderMethods.add(psiMethod);
@@ -87,7 +88,6 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
                     currentElementFound = true;
                     break;
                 }
-
             }
         }
         possiblyInvokedBuilderMethods.addAll(definitelyInvokedBuilderMethods);
@@ -128,7 +128,7 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
     }
 
     @Override
-    public void visitWhileStatement(PsiWhileStatement statement){
+    public void visitWhileStatement(PsiWhileStatement statement) {
         statement.getBody().accept(this);
     }
 
@@ -204,14 +204,14 @@ public class InvokedBuilderMethodVisitor extends JavaElementVisitor implements P
     }
 
     public Set<PsiMethod> getDefinitelyInvokedMethods() {
-        if(!psiElement2DefinitelyInvokedBuilderMethods.containsKey(psiTreeEntryNode)){
+        if (!psiElement2DefinitelyInvokedBuilderMethods.containsKey(psiTreeEntryNode)) {
             psiTreeEntryNode.accept(this);
         }
         return psiElement2DefinitelyInvokedBuilderMethods.get(psiTreeEntryNode);
     }
 
     public Set<PsiMethod> getPossiblyInvokedBuilderMethods() {
-        if(!psiElement2DefinitelyInvokedBuilderMethods.containsKey(psiTreeEntryNode)){
+        if (!psiElement2DefinitelyInvokedBuilderMethods.containsKey(psiTreeEntryNode)) {
             psiTreeEntryNode.accept(this);
         }
         return possiblyInvokedBuilderMethods;
