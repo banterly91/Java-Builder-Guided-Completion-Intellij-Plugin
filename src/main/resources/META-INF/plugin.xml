@@ -1,4 +1,4 @@
-<idea-plugin>
+<idea-plugin url="https://github.com/banterly91/Builder-Guided-Completion-Plugin">
     <id>net.banterly.builderguidedcompletionplugin</id>
     <name>Builder Guided Completion</name>
     <vendor>banterly</vendor>
@@ -8,6 +8,7 @@
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
 
+    <change-notes>The initial release of the builder guided completion plugin.</change-notes>
 
     <extensions defaultExtensionNs="com.intellij">
         <completion.contributor language="JAVA" order="before javaLegacy" implementationClass="net.banterly.buildercompletion.BuilderCompletionProvider"/>
