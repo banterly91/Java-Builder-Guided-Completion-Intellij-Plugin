@@ -3,5 +3,7 @@
 # mandatory-builder-fields-intellij-plugin Changelog
 
 ## [Unreleased]
+
+## [0.1.3] - 2020-12-31
 ### Added
-- Initial scaffold created from [IntelliJ Platform Plugin Template](https://github.com/JetBrains/intellij-platform-plugin-template)
+- first version of the **Builder Guided Completion Plugin**
