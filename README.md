@@ -11,6 +11,8 @@ This Intellij Plugin is designed to help you navigate the invocation of a [Build
 It allows the creator of the Builder API to specify what methods are mandatory, what methods can be invoked more than once and more!
 
 The user of the Builder API will have a guided experience through the auto-completion popup which will mark what methods are required, optional or invalid.
+
+The home of the project together with its documentation is at https://github.com/banterly91/Java-Builder-Guided-Completion-Intellij-Plugin.
 <!-- Plugin description end -->
 ![Completion example](docs/images/example1AutoCompletion.PNG)
 
