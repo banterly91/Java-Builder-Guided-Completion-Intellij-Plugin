@@ -169,6 +169,9 @@ In general the grouping is done as you might expect, but for those curious the e
 This is just the first version of the plugin, so it comes with a couple of limitations which are planned to be fixed, especially if this plugin starts getting some usage.
 The following will likely be included in a future release:
 
+##### Integrate with Project Lombok
+Project Lombok is widely used in the java community for automatically generating a lot of Java boilerplate code. This includes generating a lot of Builder classes. I would very much like to make this plugin work together with what Project Lombok provides. Actually part of the inspiration for this work came from one of their posts: https://github.com/rzwitserloot/lombok/wiki/FEATURE-IDEA:-%22Mandatory%22-fields-with-@Builder
+
 ##### Advanced Builder Guidance
 We could have cases where a builder could have multiple construction paths. For example if `methodA` is called then we can call only `methodB` on the builder, but if `methodC` is called then only `methodD` can be further called on the Builder. 
 
