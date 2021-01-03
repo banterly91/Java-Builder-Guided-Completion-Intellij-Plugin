@@ -1,4 +1,4 @@
-# Builder Guided Completion Plugin
+# Java Builder Pattern Guided Completion Intellij Plugin
 
 ![Build](https://github.com/banterly91/Builder-Guided-Completion-Plugin/workflows/Build/badge.svg)
 [![Version](https://img.shields.io/jetbrains/plugin/v/15695.svg)](https://plugins.jetbrains.com/plugin/15695)
@@ -6,9 +6,9 @@
 
 
 <!-- Plugin description -->
-This Intellij Plugin is designed to help you navigate the invocation of a [Builder](https://refactoring.guru/design-patterns/builder).
+This Intellij Plugin is designed to help you navigate the invocation of a [Builder](https://refactoring.guru/design-patterns/builder) class as part of the pattern with the same name.
 
-It allows the creator of the Builder API to specify what methods are mandatory and what methods can be invoked more than once.
+It allows the creator of the Builder API to specify what methods are mandatory, what methods can be invoked more than once and more!
 
 The user of the Builder API will have a guided experience through the auto-completion popup which will mark what methods are required, optional or invalid.
 <!-- Plugin description end -->
