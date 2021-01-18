@@ -1,0 +1,67 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group 'net.banterly'
+version '0.1.5'
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            pom {
+                name = 'Builder Guided Completion Annotations'
+                description = 'Annotations to be used with the Intellij Builder Guided Completion Plugin'
+                url = 'https://github.com/banterly91/Java-Builder-Guided-Completion-Intellij-Plugin'
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'banterly'
+                        name = 'Dragos Barosan'
+                        email = 'barosan.dragos@gmail.com'
+                        organization = 'banterly'
+                        organizationUrl = 'https://www.banterly.net'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:ssh://github.com:banterly91/Java-Builder-Guided-Completion-Intellij-Plugin.git'
+                    developerConnection = 'scm:git:ssh://github.com:banterly91/Java-Builder-Guided-Completion-Intellij-Plugin.git'
+                    url = 'https://github.com/banterly91/Java-Builder-Guided-Completion-Intellij-Plugin'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials(PasswordCredentials)
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
