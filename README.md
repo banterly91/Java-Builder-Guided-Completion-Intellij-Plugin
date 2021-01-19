@@ -17,7 +17,7 @@ The home of the project together with its documentation is at https://github.com
 ![Completion example](docs/images/example1AutoCompletion.PNG)
 
 ## Usage
-After installing this plugin, 3 annotations will be available for the Builder API author, and they should be used as follows:
+After setting up this plugin(see bellow), 3 annotations will be available for the Builder API author, and they should be used as follows:
 ##### @BuilderClass
 Used to mark the builder class
 ```java
@@ -164,6 +164,27 @@ In general the grouping is done as you might expect, but for those curious the e
 
   Download the [latest release](https://github.com/banterly91/Builder-Guided-Completion-Plugin/releases/latest) and install it manually using
   <kbd>Preferences</kbd> > <kbd>Plugins</kbd> > <kbd>⚙️</kbd> > <kbd>Install plugin from disk...</kbd>
+
+## Required Dependency
+You need to add a dependency in order to have the annotations available in your project.
+
+If you are using Maven, you can add this to your pom.xml:
+```xml
+<dependencies>
+	<dependency>
+		<groupId>net.banterly</groupId>
+		<artifactId>builder-guided-completion-annotations</artifactId>
+		<version>0.1.5</version>
+	</dependency>
+</dependencies>
+```
+
+If you are using Gradle you can add the following to your build.gradle.kts :
+```kotlin
+dependencies {
+    implementation(group = "net.banterly", name = "builder-guided-completion-annotations", version = "0.1.5")
+}
+```
 
 ## Roadmap
 This is just the first version of the plugin, so it comes with a couple of limitations which are planned to be fixed, especially if this plugin starts getting some usage.
