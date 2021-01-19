@@ -41,7 +41,7 @@ repositories {
 }
 dependencies {
     detektPlugins("io.gitlab.arturbosch.detekt:detekt-formatting:1.13.1")
-    implementation(group= "net.banterly", name = "builder-guided-completion-annotations", version =  "0.1.5" )
+    implementation(group = "net.banterly", name = "builder-guided-completion-annotations", version = "0.1.5")
 }
 
 // Configure gradle-intellij-plugin plugin.
